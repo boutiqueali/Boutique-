@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boutique Ali - 100 articles</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://checkout.flutterwave.com/v3.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { margin: 0; padding: 0; background: #f9f9f9; color: #111; }
+    header { background: #111; color: white; padding: 1rem 2rem; text-align: center; font-size: 2rem; font-weight: 700; }
+    .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; padding: 2rem; }
+    .card { background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 1rem; text-align: center; transition: transform 0.2s; }
+    .card:hover { transform: translateY(-5px); }
+    .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; }
+    .card h2 { font-size: 1rem; margin: 0.5rem 0; min-height: 2.5em; }
+    .card p { color: #555; margin-bottom: .5rem; }
+    .btn { background: #111; color: white; padding: 0.4rem 0.8rem; border: none; border-radius: 6px; cursor: pointer; }
+    .btn:hover { background: #333; }
+    .payment-form { max-width: 500px; background: white; margin: 2rem auto; padding: 2rem; border-radius: 16px; box-shadow: 0 6px 12px rgba(0,0,0,0.1); display: none;}
+    .payment-form h2 { margin-bottom: 1rem; font-size: 1.5rem; }
+    .payment-form input { width: 100%; padding: 0.7rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <header>Boutique Ali</header>
+  <div class="products"></div>
+
+  <div class="payment-form" id="form">
+    <h2>Paiement - <span id="product-name"></span></h2>
+    <form id="payForm">
+      <input type="text" id="client-name" placeholder="Nom complet" required />
+      <input type="email" id="client-email" placeholder="Adresse email" required />
+      <button class="btn" type="submit">Payer <span id="product-price"></span> €</button>
+    </form>
+  </div>
+
+  <script>
+    const imageUrls = [
+      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/2cd1ed84-fb2d-46ec-8e94-10a66e3c1054.jpg",
+      "https://static.nike.com/a/images/t_prod_ss/w_640,c_limit,f_auto/94c9fc15-87dc-4ec0-a14a-0646a5d9a9c4/nike-air-max.jpg",
+      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/e6a9e09b-e4a5-4ad6-9324-f728a40857b5/air-max.jpg"
+    ];
+
+    const container = document.querySelector(".products");
+
+    for (let i = 0; i < 100; i++) {
+      const img = imageUrls[i % imageUrls.length];
+      const name = "Nike " + ["Air Max", "Pegasus", "React", "Dunk", "Cortez"][i % 5];
+      const price = (Math.random() * 150 + 30).toFixed(2);
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <img src="${img}" alt="${name}" loading="lazy">
+        <h2>${name}</h2>
+        <p>${price} €</p>
+        <button class="btn" onclick="openForm('${name}', ${price})">Acheter</button>
+      `;
+      container.appendChild(card);
+    }
+
+    let selected = {};
+    function openForm(name, price) {
+      selected = { name, price };
+      document.getElementById("product-name").innerText = name;
+      document.getElementById("product-price").innerText = price;
+      document.getElementById("form").style.display = "block";
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    }
+
+    document.getElementById("payForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const name = document.getElementById("client-name").value;
+      const email = document.getElementById("client-email").value;
+
+      FlutterwaveCheckout({
+        public_key: "FLWPUBK_TEST-xxxxxxxxxxxxxxxxxxxxxx", // 👉 Mets ta vraie clé ici
+        tx_ref: "tx_" + Date.now(),
+        amount: selected.price,
+        currency: "EUR", // ou "XOF", "USD", etc.
+        payment_options: "card, paypal, mobilemoney",
+        redirect_url: "merci.html", // Redirection après paiement
+        customer: {
+          email: email,
+          name: name,
+        },
+        customizations: {
+          title: "Boutique Ali",
+          description: selected.name,
+          logo: "https://via.placeholder.com/150" // Remplace si tu veux
+        }
+      });
+
+      document.getElementById("form").style.display = "none";
+    });
+  </script>
+</body>
+</html>
